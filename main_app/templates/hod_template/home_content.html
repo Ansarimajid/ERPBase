@@ -1,0 +1,35 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+
+{% block page_title %}Dashboard{% endblock page_title %}
+
+{% block breadcrumb %}
+    <li class="breadcrumb-item active">Dashboard</li>
+{% endblock breadcrumb %}
+
+{% block content %}
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon primary">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+            <div class="stat-number" style="color: var(--primary-color);">{{ total_students }}</div>
+            <p class="stat-label">Total Students</p>
+            <a href="{% url 'manage_student' %}" class="btn btn-primary btn-sm mt-2">
+                <i class="fas fa-eye"></i> View All
+            </a>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon success">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-number" style="color: var(--success-color);">{{ total_staff }}</div>
+            <p class="stat-label">Total Staff</p>
+            <a href="{% url 'manage_staff' %}" class="btn btn-primary btn-sm mt-2">
+                <i class="fas fa-eye"></i> View All
+            </a>
+        </div>
+
+{% endblock content %}

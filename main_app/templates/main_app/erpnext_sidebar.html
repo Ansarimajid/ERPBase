@@ -1,0 +1,141 @@
+{% load static %}
+
+<!-- Sidebar Header -->
+<div class="sidebar-header">
+    <div class="sidebar-user">
+        <img src="{{ request.user.profile_pic}}" alt="User Avatar" class="sidebar-user-avatar" id="sidebar-avatar" onerror="showDefaultAvatar()">
+        <i class="fas fa-user-circle sidebar-default-avatar" id="default-avatar" style="display: none;"></i>
+        <div class="sidebar-user-info">
+            <h6>{{ user.get_full_name|default:user.username }}</h6>
+            <small>
+                {% if user.user_type == '1' %}
+                    Administrator
+                {% elif user.user_type == '2' %}
+                    Staff Member
+                {% else %}
+                    Student
+                {% endif %}
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Navigation Menu -->
+<div class="nav-section">
+    {% if user.user_type == '1' %}
+        <!-- Admin Navigation -->
+        <h6 class="nav-section-title">Main</h6>
+        
+        <div class="nav-item">
+            {% url 'admin_home' as admin_home %}
+            <a href="{{ admin_home }}" class="nav-link {% if admin_home == request.path %}active{% endif %}">
+                <i class="nav-icon fas fa-tachometer-alt"></i>
+                <span class="nav-text">Dashboard</span>
+            </a>
+        </div>
+        
+        <div class="nav-item">
+            {% url 'admin_view_profile' as admin_view_profile %}
+            <a href="{{ admin_view_profile }}" class="nav-link {% if admin_view_profile == request.path %}active{% endif %}">
+                <i class="fas fa-user-circle"></i>
+                <span class="nav-text">Profile</span>
+            </a>
+        </div>
+
+        <h6 class="nav-section-title">User Management</h6>
+        
+        <div class="nav-item">
+            {% url 'add_staff' as add_staff %}
+            <a href="{{ add_staff }}" class="nav-link {% if add_staff == request.path %}active{% endif %}">
+                <i class="nav-icon fas fa-user-plus"></i>
+                <span class="nav-text">Add Staff</span>
+            </a>
+        </div>
+
+        <div class="nav-item">
+            {% url 'manage_staff' as manage_staff %}
+            <a href="{{ manage_staff }}" class="nav-link {% if manage_staff == request.path or 'edit_staff' in request.path %}active{% endif %}">
+                <i class="nav-icon fas fa-users-cog"></i>
+                <span class="nav-text">Manage Staff</span>
+            </a>
+        </div>
+
+        <div class="nav-item">
+            {% url 'add_student' as add_student %}
+            <a href="{{ add_student }}" class="nav-link {% if add_student == request.path %}active{% endif %}">
+                <i class="nav-icon fas fa-user-graduate"></i>
+                <span class="nav-text">Add Student</span>
+            </a>
+        </div>
+
+        <div class="nav-item">
+            {% url 'manage_student' as manage_student %}
+            <a href="{{ manage_student }}" class="nav-link {% if manage_student == request.path or 'edit_student' in request.path %}active{% endif %}">
+                <i class="nav-icon fas fa-users"></i>
+                <span class="nav-text">Manage Students</span>
+            </a>
+        </div>
+
+    {% elif user.user_type == '2' %}
+        <!-- Staff Navigation -->
+        <h6 class="nav-section-title">Main</h6>
+        
+        <div class="nav-item">
+            {% url 'staff_home' as staff_home %}
+            <a href="{{ staff_home }}" class="nav-link {% if staff_home == request.path %}active{% endif %}">
+                <i class="nav-icon fas fa-tachometer-alt"></i>
+                <span class="nav-text">Dashboard</span>
+            </a>
+        </div>
+        
+        <div class="nav-item">
+            {% url 'staff_view_profile' as staff_view_profile %}
+            <a href="{{ staff_view_profile }}" class="nav-link {% if staff_view_profile == request.path %}active{% endif %}">
+                <i class="fas fa-user-circle"></i>
+                <span class="nav-text">Profile</span>
+            </a>
+        </div>
+
+    {% else %}
+        <!-- Student Navigation -->
+        <h6 class="nav-section-title">Main</h6>
+        
+        <div class="nav-item">
+            {% url 'student_home' as student_home %}
+            <a href="{{ student_home }}" class="nav-link {% if student_home == request.path %}active{% endif %}">
+                <i class="nav-icon fas fa-tachometer-alt"></i>
+                <span class="nav-text">Dashboard</span>
+            </a>
+        </div>
+        
+        <div class="nav-item">
+            {% url 'student_view_profile' as student_view_profile %}
+            <a href="{{ student_view_profile }}" class="nav-link {% if student_view_profile == request.path %}active{% endif %}">
+                <i class="fas fa-user-circle"></i>
+                <span class="nav-text">Profile</span>
+            </a>
+        </div>
+
+    {% endif %}
+</div>
+
+<script>
+function showDefaultAvatar() {
+    // Hide the broken image
+    document.getElementById('sidebar-avatar').style.display = 'none';
+    // Show the default FontAwesome icon
+    document.getElementById('default-avatar').style.display = 'inline-block';
+}
+
+// Also check if profile_pic is empty or null and show default avatar
+document.addEventListener('DOMContentLoaded', function() {
+    const avatar = document.getElementById('sidebar-avatar');
+    const defaultAvatar = document.getElementById('default-avatar');
+    
+    // Check if src is empty, null, or just whitespace
+    if (!avatar.src || avatar.src.trim() === '' || avatar.src === window.location.href) {
+        avatar.style.display = 'none';
+        defaultAvatar.style.display = 'inline-block';
+    }
+});
+</script>
