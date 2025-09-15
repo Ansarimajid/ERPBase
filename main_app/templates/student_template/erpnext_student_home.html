@@ -38,7 +38,31 @@
         </div>
         
     </div>
-
+        <!-- Quick Actions -->
+        <div class="row">
+            <div class="col-12">
+                <div class="erpnext-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-bolt me-2"></i>
+                            Most Asked Questions
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for q in most_asked %}
+                            <li class="list-group-item">
+                                <strong>Q:</strong> {{ q.representative }} <br>
+                                <small class="text-muted">Asked {{ q.count }} times</small>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item text-muted">No repeated questions yet.</li>
+                        {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Quick Actions -->
         <div class="row">
@@ -65,6 +89,7 @@
                 </div>
             </div>
         </div>
+        
         
     
 {% endblock content %}
