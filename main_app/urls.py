@@ -51,5 +51,10 @@ urlpatterns = [
     path("student/view/profile/", student_views.student_view_profile,
          name='student_view_profile'),
 
+     path("ID/<str:company_id>/chat", views.company_chat, name="company_chat"),
+    path("ID/<str:company_id>/feedback", views.submit_feedback, name="submit_feedback"),
+    path("index", views.home, name="home"),
+    path("widget", views.widget, name="widget"),
+
 
 ]

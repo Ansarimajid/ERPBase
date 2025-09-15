@@ -10,6 +10,13 @@ from .EmailBackend import EmailBackend
 
 # Create your views here.
 
+from django.http import JsonResponse, StreamingHttpResponse, FileResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.conf import settings
+import json, uuid, os
+from .utils import get_db, build_prompt, stream_model, save_qa
+
 
 def login_page(request):
     if request.user.is_authenticated:
@@ -77,3 +84,53 @@ def logout_user(request):
         logout(request)
     return redirect("/")
 
+
+@csrf_exempt
+@require_POST
+def company_chat(request, company_id):
+    try:
+        db = get_db(company_id)
+    except ValueError as e:
+        return JsonResponse({"error": str(e)}, status=404)
+
+    data = json.loads(request.body.decode("utf-8"))
+    question = data.get("question")
+    history = data.get("history", [])
+
+    if not question:
+        return JsonResponse({"error": "No question provided"}, status=400)
+
+    prompt = build_prompt(question, db)
+    qid = str(uuid.uuid4())
+
+    def event_stream():
+        answer = ""
+        for token in stream_model(prompt):
+            answer += token
+            safe_token = token.replace("\n", " ")
+            yield f"data: {safe_token}\n\n"
+        save_qa(company_id, question, answer, qid=qid)
+
+    response = StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+    response["X-QID"] = qid
+    return response
+
+@csrf_exempt
+@require_POST
+def submit_feedback(request, company_id):
+    data = json.loads(request.body.decode("utf-8"))
+    qid = data.get("qid")
+    feedback = data.get("feedback")
+
+    if not qid or not feedback:
+        return JsonResponse({"error": "Both qid and feedback are required"}, status=400)
+
+    save_qa(company_id, feedback=feedback, qid=qid)
+    return JsonResponse({"status": "success", "message": "Feedback saved"})
+
+def home(request):
+    return render(request, "Rag/index.html")
+
+def widget(request):
+    widget_path = os.path.join(settings.BASE_DIR, "rag", "widget.js")
+    return FileResponse(open(widget_path, "rb"), content_type="application/javascript")

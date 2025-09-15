@@ -57,12 +57,30 @@ class CustomUserForm(FormSettings):
 
 
 class StudentForm(CustomUserForm):
+    student_id = forms.CharField(required=True, max_length=20)  # NEW
+
     def __init__(self, *args, **kwargs):
         super(StudentForm, self).__init__(*args, **kwargs)
+        if kwargs.get('instance'):
+            # populate existing student_id on edit
+            self.fields['student_id'].initial = kwargs['instance'].student_id
 
     class Meta(CustomUserForm.Meta):
         model = Student
-        fields = CustomUserForm.Meta.fields 
+        fields = CustomUserForm.Meta.fields + ['student_id']  # ADD student_id
+
+
+class StudentEditForm(CustomUserForm):
+    student_id = forms.CharField(required=True, max_length=20)  # NEW
+
+    def __init__(self, *args, **kwargs):
+        super(StudentEditForm, self).__init__(*args, **kwargs)
+        if kwargs.get('instance'):
+            self.fields['student_id'].initial = kwargs['instance'].student_id
+
+    class Meta(CustomUserForm.Meta):
+        model = Student
+        fields = CustomUserForm.Meta.fields + ['student_id']
 
 
 class AdminForm(CustomUserForm):
@@ -82,13 +100,7 @@ class StaffForm(CustomUserForm):
         model = Staff
         fields = CustomUserForm.Meta.fields 
 
-class StudentEditForm(CustomUserForm):
-    def __init__(self, *args, **kwargs):
-        super(StudentEditForm, self).__init__(*args, **kwargs)
 
-    class Meta(CustomUserForm.Meta):
-        model = Student
-        fields = CustomUserForm.Meta.fields 
 
 
 class StaffEditForm(CustomUserForm):

@@ -61,59 +61,6 @@ def add_staff(request):
 
     return render(request, 'hod_template/add_staff_template.html', context)
 
-
-def add_student(request):
-    student_form = StudentForm(request.POST or None, request.FILES or None)
-    context = {'form': student_form, 'page_title': 'Add Student'}
-    if request.method == 'POST':
-        if student_form.is_valid():
-            first_name = student_form.cleaned_data.get('first_name')
-            last_name = student_form.cleaned_data.get('last_name')
-            address = student_form.cleaned_data.get('address')
-            email = student_form.cleaned_data.get('email')
-            gender = student_form.cleaned_data.get('gender')
-            password = student_form.cleaned_data.get('password')
-            course = student_form.cleaned_data.get('course')
-            session = student_form.cleaned_data.get('session')
-            passport = request.FILES['profile_pic']
-            fs = FileSystemStorage()
-            filename = fs.save(passport.name, passport)
-            passport_url = fs.url(filename)
-            try:
-                user = CustomUser.objects.create_user(
-                    email=email, password=password, user_type=3, first_name=first_name, last_name=last_name, profile_pic=passport_url)
-                user.gender = gender
-                user.address = address
-                user.student.session = session
-                user.student.course = course
-                user.save()
-                messages.success(request, "Successfully Added")
-                return redirect(reverse('add_student'))
-            except Exception as e:
-                messages.error(request, "Could Not Add: " + str(e))
-        else:
-            messages.error(request, "Could Not Add: ")
-    return render(request, 'hod_template/add_student_template.html', context)
-
-
-
-def manage_staff(request):
-    allStaff = CustomUser.objects.filter(user_type=2)
-    context = {
-        'allStaff': allStaff,
-        'page_title': 'Manage Staff'
-    }
-    return render(request, "hod_template/manage_staff.html", context)
-
-
-def manage_student(request):
-    students = CustomUser.objects.filter(user_type=3)
-    context = {
-        'students': students,
-        'page_title': 'Manage Students'
-    }
-    return render(request, "hod_template/manage_student.html", context)
-
 def edit_staff(request, staff_id):
     staff = get_object_or_404(Staff, id=staff_id)
     form = StaffForm(request.POST or None, instance=staff)
@@ -162,6 +109,59 @@ def edit_staff(request, staff_id):
         staff = Staff.objects.get(id=user.id)
         return render(request, "hod_template/edit_staff_template.html", context)
 
+def manage_staff(request):
+    allStaff = CustomUser.objects.filter(user_type=2)
+    context = {
+        'allStaff': allStaff,
+        'page_title': 'Manage Staff'
+    }
+    return render(request, "hod_template/manage_staff.html", context)
+
+def add_student(request):
+    student_form = StudentForm(request.POST or None, request.FILES or None)
+    context = {'form': student_form, 'page_title': 'Add Student'}
+    if request.method == 'POST':
+        if student_form.is_valid():
+            first_name = student_form.cleaned_data.get('first_name')
+            last_name = student_form.cleaned_data.get('last_name')
+            address = student_form.cleaned_data.get('address')
+            email = student_form.cleaned_data.get('email')
+            gender = student_form.cleaned_data.get('gender')
+            password = student_form.cleaned_data.get('password')
+            student_id = student_form.cleaned_data.get('student_id')  # NEW
+            passport = request.FILES['profile_pic']
+            fs = FileSystemStorage()
+            filename = fs.save(passport.name, passport)
+            passport_url = fs.url(filename)
+            try:
+                user = CustomUser.objects.create_user(
+                    email=email, password=password, user_type=3, first_name=first_name, last_name=last_name, profile_pic=passport_url)
+                user.gender = gender
+                user.address = address
+                user.save()
+                
+                # Assign Student ID
+                student = Student.objects.get(admin=user)
+                student.student_id = student_id
+                student.save()
+
+                messages.success(request, "Successfully Added")
+                return redirect(reverse('add_student'))
+            except Exception as e:
+                messages.error(request, "Could Not Add: " + str(e))
+        else:
+            messages.error(request, "Could Not Add: ")
+    return render(request, 'hod_template/add_student_template.html', context)
+
+
+def manage_student(request):
+    students = CustomUser.objects.filter(user_type=3)
+    context = {
+        'students': students,
+        'page_title': 'Manage Students'
+    }
+    return render(request, "hod_template/manage_student.html", context)
+
 
 def edit_student(request, student_id):
     student = get_object_or_404(Student, id=student_id)
@@ -180,8 +180,7 @@ def edit_student(request, student_id):
             email = form.cleaned_data.get('email')
             gender = form.cleaned_data.get('gender')
             password = form.cleaned_data.get('password') or None
-            course = form.cleaned_data.get('course')
-            session = form.cleaned_data.get('session')
+            student_id_val = form.cleaned_data.get('student_id')  # NEW
             passport = request.FILES.get('profile_pic') or None
             try:
                 user = CustomUser.objects.get(id=student.admin.id)
@@ -196,12 +195,14 @@ def edit_student(request, student_id):
                     user.set_password(password)
                 user.first_name = first_name
                 user.last_name = last_name
-                student.session = session
                 user.gender = gender
                 user.address = address
-                student.course = course
                 user.save()
+                
+                # Update Student ID
+                student.student_id = student_id_val
                 student.save()
+
                 messages.success(request, "Successfully Updated")
                 return redirect(reverse('edit_student', args=[student_id]))
             except Exception as e:
