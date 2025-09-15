@@ -94,3 +94,17 @@ def save_user_profile(sender, instance, **kwargs):
         instance.staff.save()
     if instance.user_type == 3:
         instance.student.save()
+
+from django.db import models
+from django.utils import timezone
+
+class ChatLog(models.Model):
+    qid = models.CharField(max_length=100, unique=True)
+    student = models.ForeignKey("Student", to_field="student_id", on_delete=models.CASCADE)  
+    question = models.TextField()
+    answer = models.TextField()
+    feedback = models.TextField(blank=True, null=True)
+    timestamp = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.student.student_id} - {self.qid}"

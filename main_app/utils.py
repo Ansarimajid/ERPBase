@@ -53,42 +53,30 @@ Question: {user_query}
 
 Answer:"""
 
+from .models import ChatLog, Student
+
 def save_qa(company_id: str, question=None, answer=None, feedback=None, qid=None):
-    file_path = os.path.join(LOG_ROOT, f"{company_id}.md")
-    content = ""
-    if os.path.exists(file_path):
-        with open(file_path, "r", encoding="utf-8") as f:
-            content = f.read()
+    if not qid:
+        qid = str(uuid.uuid4())
 
-    timestamp = datetime.now().isoformat()
+    try:
+        student = Student.objects.get(student_id=company_id)
+    except Student.DoesNotExist:
+        raise ValueError(f"No student found with ID: {company_id}")
 
-    if answer:  # Save Q&A
-        if not qid:
-            qid = str(uuid.uuid4())
-        entry = (
-            "---\n"
-            f"QID: {qid}\n"
-            f"Question: {question}\n"
-            f"Answer: {answer}\n"
-            f"Feedback: \n"
-            f"Timestamp: {timestamp}\n"
-            "---\n\n"
+    if answer:  # Save new Q&A
+        ChatLog.objects.create(
+            qid=qid,
+            student=student,
+            question=question,
+            answer=answer,
         )
-        content += entry
-    elif feedback and qid:  # Save Feedback
-        sections = content.split("---\n")
-        for i in range(len(sections) - 1, -1, -1):
-            if f"QID: {qid}\n" in sections[i]:
-                lines = sections[i].splitlines()
-                for idx, line in enumerate(lines):
-                    if line.startswith("Feedback:"):
-                        lines[idx] = f"Feedback: {feedback}"
-                        break
-                sections[i] = "\n".join(lines)
-                break
-        content = "---\n".join(sections)
-
-    with open(file_path, "w", encoding="utf-8") as f:
-        f.write(content)
+    elif feedback and qid:  # Update feedback
+        try:
+            log = ChatLog.objects.get(qid=qid, student=student)
+            log.feedback = feedback
+            log.save()
+        except ChatLog.DoesNotExist:
+            raise ValueError(f"No chat log found with QID: {qid}")
 
     return qid
