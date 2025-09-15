@@ -8,32 +8,63 @@
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-icon bg-blue">
-                <i class="fas fa-calendar-alt"></i>
+                <i class="fas fa-question-circle"></i>
             </div>
             <div class="stat-content">
-                <div class="stat-number">{{total_attendance}}</div>
-                <div class="stat-label">Total Attendance</div>
+                <div class="stat-number">{{ total_questions }}</div>
+                <div class="stat-label">Total Questions Asked</div>
             </div>
         </div>
+    
         
         <div class="stat-card">
             <div class="stat-icon bg-green">
-                <i class="fas fa-calendar-check"></i>
+                <i class="fas fa-smile"></i>
             </div>
             <div class="stat-content">
-                <div class="stat-number">{{percent_present}}<span class="stat-unit">%</span></div>
-                <div class="stat-label">Percentage Present</div>
+                <div class="stat-number">{{ satisfied_count }}</div>
+                <div class="stat-label">Satisfied Feedback</div>
             </div>
         </div>
         
         <div class="stat-card">
             <div class="stat-icon bg-red">
-                <i class="fas fa-calendar-minus"></i>
+                <i class="fas fa-frown"></i>
             </div>
             <div class="stat-content">
-                <div class="stat-number">{{percent_absent}}<span class="stat-unit">%</span></div>
-                <div class="stat-label">Percentage Absent</div>
+                <div class="stat-number">{{ not_satisfied_count }}</div>
+                <div class="stat-label">Not Satisfied Feedback</div>
             </div>
         </div>
+        
     </div>
+
+
+        <!-- Quick Actions -->
+        <div class="row">
+            <div class="col-12">
+                <div class="erpnext-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-bolt me-2"></i>
+                            Recent Question
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                        {% for log in recent_questions %}
+                            <li class="list-group-item">
+                                <strong>Q:</strong> {{ log.question|truncatechars:80 }} <br>
+                                <small class="text-muted">Asked on {{ log.timestamp|date:"M d, Y H:i" }}</small>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item text-muted">No questions asked yet.</li>
+                        {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    
 {% endblock content %}

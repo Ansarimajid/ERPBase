@@ -17,12 +17,21 @@ from .models import *
 def student_home(request):
     student = get_object_or_404(Student, admin=request.user)
 
+    total_questions = ChatLog.objects.filter(student=student).count()
+    satisfied_count = ChatLog.objects.filter(student=student, feedback__iexact="satisfied").count()
+    not_satisfied_count = ChatLog.objects.filter(student=student, feedback__iexact="not satisfied").count()
+
+    recent_questions = ChatLog.objects.filter(student=student).order_by("-timestamp")[:5]
 
     context = {
-        'page_title': 'Student Homepage'
-
+        'page_title': 'Student Homepage',
+        'total_questions': total_questions,
+        'satisfied_count': satisfied_count,
+        'not_satisfied_count': not_satisfied_count,
+        'recent_questions': recent_questions,
     }
     return render(request, 'student_template/erpnext_student_home.html', context)
+
 
 
 def student_view_profile(request):
@@ -63,3 +72,13 @@ def student_view_profile(request):
             messages.error(request, "Error Occured While Updating Profile " + str(e))
 
     return render(request, "student_template/student_view_profile.html", context)
+
+def student_chatlog(request):
+    student = get_object_or_404(Student, admin=request.user)
+    logs = ChatLog.objects.filter(student=student).order_by("-timestamp")
+
+    context = {
+        "page_title": "My Chat History",
+        "logs": logs,
+    }
+    return render(request, "student_template/student_chatlog.html", context)

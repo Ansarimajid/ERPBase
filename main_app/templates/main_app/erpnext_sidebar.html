@@ -116,6 +116,15 @@
             </a>
         </div>
 
+        <div class="nav-item">
+            {% url 'student_chatlog' as student_chatlog %}
+            <a href="{% url 'student_chatlog' %}" class="nav-link {% if student_chatlog == request.path %}active{% endif %}">
+                <i class="fas fa-user-circle"></i>
+                <span class="nav-text">Chat Log</span>
+            </a>
+        </div>
+        
+
     {% endif %}
 </div>
 

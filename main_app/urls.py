@@ -50,6 +50,8 @@ urlpatterns = [
     path("student/home/", student_views.student_home, name='student_home'),
     path("student/view/profile/", student_views.student_view_profile,
          name='student_view_profile'),
+     path("student/chatlog/", student_views.student_chatlog, name="student_chatlog"),
+
 
      path("ID/<str:company_id>/chat", views.company_chat, name="company_chat"),
     path("ID/<str:company_id>/feedback", views.submit_feedback, name="submit_feedback"),
