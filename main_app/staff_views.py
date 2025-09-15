@@ -1,5 +1,3 @@
-import json
-
 from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
 from django.http import HttpResponse, JsonResponse
@@ -14,7 +12,7 @@ from datetime import date
 
 def staff_home(request):
     staff = get_object_or_404(Staff, admin=request.user)
-    total_students = Student.objects.all()
+    total_students = Student.objects.count()
     context = {
         'page_title': 'Staff Panel - ' + str(staff.admin.first_name) + ' ' + str(staff.admin.last_name[0]),
         'total_students': total_students
