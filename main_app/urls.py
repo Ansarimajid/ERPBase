@@ -54,6 +54,8 @@ urlpatterns = [
      path("student/chatlog/satisfied", student_views.student_chatlog_satisfied, name="student_chatlog_satisfied"),
      path("student/chatlog/notsatisfied", student_views.student_chatlog_notsatisfied, name="student_chatlog_notsatisfied"),
 
+     path("student/snippet/", student_views.snippet, name="snippet"),
+
      path("ID/<str:company_id>/chat", views.company_chat, name="company_chat"),
     path("ID/<str:company_id>/feedback", views.submit_feedback, name="submit_feedback"),
     path("index", views.home, name="home"),

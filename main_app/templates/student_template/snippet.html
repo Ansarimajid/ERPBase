@@ -1,0 +1,68 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+<div class="container mt-4">
+    <h5>Customize your snippet:</h5>
+    <form id="snippet-form" class="mb-3">
+        <div class="row">
+            <div class="col-md-4">
+                <label for="botName" class="form-label">Bot Name</label>
+                <input type="text" id="botName" class="form-control" value="AI Assistant">
+            </div>
+            <div class="col-md-4">
+                <label for="primaryColor" class="form-label">Primary Color</label>
+                <input type="color" id="primaryColor" class="form-control form-control-color" value="#667eea">
+            </div>
+        </div>
+    </form>
+
+    <h5>Copy this snippet:</h5>
+    <div class="position-relative">
+        <!-- Snippet box -->
+        <pre id="snippet-box" class="border rounded bg-light p-3"><code>
+&lt;script src="http://192.168.1.10:5000/widget"
+        data-api-url="http://192.168.1.10:5000/ID/{{ student_id }}"
+        data-bot-name="AI Assistant"
+        data-primary-color="#667eea"&gt;
+&lt;/script&gt;
+        </code></pre>
+
+        <!-- Copy button -->
+        <button id="copy-btn" class="btn btn-sm btn-outline-secondary position-absolute" 
+                style="top:10px; right:10px;">
+            Copy
+        </button>
+    </div>
+</div>
+
+<script>
+function updateSnippet() {
+    const botName = document.getElementById("botName").value;
+    const primaryColor = document.getElementById("primaryColor").value;
+
+    const snippet = `&lt;script src="http://192.168.1.10:5000/widget"
+        data-api-url="http://192.168.1.10:5000/ID/{{ student_id }}"
+        data-bot-name="${botName}"
+        data-primary-color="${primaryColor}"&gt;
+&lt;/script&gt;`;
+
+    document.querySelector("#snippet-box code").innerText = snippet;
+}
+
+document.getElementById("botName").addEventListener("input", updateSnippet);
+document.getElementById("primaryColor").addEventListener("input", updateSnippet);
+
+document.getElementById("copy-btn").addEventListener("click", function() {
+    const code = document.querySelector("#snippet-box code").innerText;
+    navigator.clipboard.writeText(code).then(() => {
+        this.innerText = "Copied!";
+        setTimeout(() => this.innerText = "Copy", 2000);
+    });
+});
+
+// Initialize snippet on page load
+updateSnippet();
+</script>
+{% endblock %}

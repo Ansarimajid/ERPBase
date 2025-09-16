@@ -143,6 +143,16 @@
             </a>
         </div>
 
+        <h6 class="nav-section-title">Web Connect</h6>
+
+        <div class="nav-item">
+            {% url 'snippet' as snippet %}
+            <a href="{% url 'snippet' %}" class="nav-link {% if snippet == request.path %}active{% endif %}">
+                <i class="nav-icon fas fa-link"></i>
+                <span class="nav-text">Snippet</span>
+            </a>
+        </div>
+
     {% endif %}
 </div>
 

@@ -162,3 +162,13 @@ def student_chatlog_notsatisfied(request):
         "logs": notsatisfied_logs,
     }
     return render(request, "student_template/student_chatlog.html", context)
+
+def snippet(request):
+    student = get_object_or_404(Student, admin=request.user)
+    student_id = student.student_id
+
+    context = {
+        "page_title": "Snippet to Connect",
+        "student_id": student_id,
+    }
+    return render(request, "student_template/snippet.html", context)
