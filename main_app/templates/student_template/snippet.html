@@ -6,31 +6,23 @@
 <div class="container mt-4">
     <h5>Customize your snippet:</h5>
     <form id="snippet-form" class="mb-3">
-        <div class="row">
+        <div class="row g-3">
             <div class="col-md-4">
                 <label for="botName" class="form-label">Bot Name</label>
                 <input type="text" id="botName" class="form-control" value="AI Assistant">
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label for="primaryColor" class="form-label">Primary Color</label>
                 <input type="color" id="primaryColor" class="form-control form-control-color" value="#667eea">
             </div>
         </div>
     </form>
 
-    <h5>Copy this snippet:</h5>
+    <h5 class="mt-3">Copy this snippet:</h5>
     <div class="position-relative">
-        <!-- Snippet box -->
-        <pre id="snippet-box" class="border rounded bg-light p-3"><code>
-&lt;script src="http://192.168.1.10:5000/widget"
-        data-api-url="http://192.168.1.10:5000/ID/{{ student_id }}"
-        data-bot-name="AI Assistant"
-        data-primary-color="#667eea"&gt;
-&lt;/script&gt;
-        </code></pre>
+        <pre id="snippet-box" class="border rounded bg-light p-3"><code id="snippet-display"></code></pre>
 
-        <!-- Copy button -->
-        <button id="copy-btn" class="btn btn-sm btn-outline-secondary position-absolute" 
+        <button id="copy-btn" class="btn btn-sm btn-outline-secondary position-absolute"
                 style="top:10px; right:10px;">
             Copy
         </button>
@@ -38,31 +30,61 @@
 </div>
 
 <script>
-function updateSnippet() {
-    const botName = document.getElementById("botName").value;
-    const primaryColor = document.getElementById("primaryColor").value;
+(function(){
+  // student_id from Django view (safe insertion for JS)
+  const studentId = "{{ student_id|escapejs }}";
 
-    const snippet = `&lt;script src="http://192.168.1.10:5000/widget"
-        data-api-url="http://192.168.1.10:5000/ID/{{ student_id }}"
-        data-bot-name="${botName}"
-        data-primary-color="${primaryColor}"&gt;
-&lt;/script&gt;`;
+  const botInput = document.getElementById('botName');
+  const colorInput = document.getElementById('primaryColor');
+  const display = document.getElementById('snippet-display');
+  const copyBtn = document.getElementById('copy-btn');
 
-    document.querySelector("#snippet-box code").innerText = snippet;
-}
+  // escape values for safe HTML attributes (so copied snippet is valid)
+  function escapeAttr(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
 
-document.getElementById("botName").addEventListener("input", updateSnippet);
-document.getElementById("primaryColor").addEventListener("input", updateSnippet);
+  function updateSnippet() {
+    const bot = botInput.value || '';
+    const color = colorInput.value || '';
 
-document.getElementById("copy-btn").addEventListener("click", function() {
-    const code = document.querySelector("#snippet-box code").innerText;
-    navigator.clipboard.writeText(code).then(() => {
-        this.innerText = "Copied!";
-        setTimeout(() => this.innerText = "Copy", 2000);
+    const botEsc = escapeAttr(bot);
+    const colorEsc = escapeAttr(color);
+    const studEsc = escapeAttr(studentId);
+
+    // build raw HTML string but split the closing tag to avoid closing this outer <script> block
+    const raw = '<script src="http://192.168.1.10:5000/widget" '
+      + 'data-api-url="http://192.168.1.10:5000/ID/' + studEsc + '" '
+      + 'data-bot-name="' + botEsc + '" '
+      + 'data-primary-color="' + colorEsc + '"></scr' + 'ipt>';
+
+    // escaped version for display (so browser shows the tags as text)
+    const escapedForDisplay = raw.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    display.innerHTML = escapedForDisplay;
+    copyBtn.dataset.raw = raw; // store raw HTML for copying
+  }
+
+  botInput.addEventListener('input', updateSnippet);
+  colorInput.addEventListener('input', updateSnippet);
+
+  copyBtn.addEventListener('click', function() {
+    const raw = this.dataset.raw || '';
+    navigator.clipboard.writeText(raw).then(() => {
+      this.innerText = 'Copied!';
+      setTimeout(() => this.innerText = 'Copy', 2000);
+    }).catch(err => {
+      alert('Copy failed: ' + err);
     });
-});
+  });
 
-// Initialize snippet on page load
-updateSnippet();
+  // initialize
+  updateSnippet();
+})();
 </script>
 {% endblock %}
