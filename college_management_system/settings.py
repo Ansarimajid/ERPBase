@@ -20,7 +20,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Allow widget.js to be loaded anywhere
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = True  # or restrict to your allowed domains
+CORS_ALLOW_HEADERS = [
+    "content-type",
+]
+CORS_EXPOSE_HEADERS = ["X-QID"]  # 👈 expose custom header
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/

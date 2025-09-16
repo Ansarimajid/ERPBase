@@ -83,7 +83,7 @@ def student_home(request):
 
 
     context = {
-        'page_title': 'Student Homepage',
+        'page_title': 'NuroBot Dashboard',
         'total_questions': total_questions,
         'satisfied_count': satisfied_count,
         'not_satisfied_count': not_satisfied_count,

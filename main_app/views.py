@@ -85,6 +85,11 @@ def logout_user(request):
     return redirect("/")
 
 
+from django.http import StreamingHttpResponse, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+import uuid
+
 @csrf_exempt
 @require_POST
 def company_chat(request, company_id):
@@ -101,7 +106,7 @@ def company_chat(request, company_id):
         return JsonResponse({"error": "No question provided"}, status=400)
 
     prompt = build_prompt(question, db)
-    qid = str(uuid.uuid4())
+    qid = str(uuid.uuid4())  # ✅ generate QID upfront
 
     def event_stream():
         answer = ""
@@ -109,11 +114,16 @@ def company_chat(request, company_id):
             answer += token
             safe_token = token.replace("\n", " ")
             yield f"data: {safe_token}\n\n"
-        save_qa(company_id, question, answer, qid=qid)
+        try:
+            save_qa(company_id, question, answer, qid=qid)
+        except Exception as e:
+            # Don’t block widget if saving fails
+            print(f"⚠️ Failed to save Q&A: {e}")
 
     response = StreamingHttpResponse(event_stream(), content_type="text/event-stream")
-    response["X-QID"] = qid
+    response["X-QID"] = qid  # ✅ always send QID
     return response
+
 
 @csrf_exempt
 @require_POST
@@ -125,8 +135,13 @@ def submit_feedback(request, company_id):
     if not qid or not feedback:
         return JsonResponse({"error": "Both qid and feedback are required"}, status=400)
 
-    save_qa(company_id, feedback=feedback, qid=qid)
+    try:
+        save_qa(company_id, feedback=feedback, qid=qid)
+    except Exception as e:
+        print(f"⚠️ Failed to save feedback: {e}")
+
     return JsonResponse({"status": "success", "message": "Feedback saved"})
+
 
 def home(request):
     return render(request, "Rag/index.html")
