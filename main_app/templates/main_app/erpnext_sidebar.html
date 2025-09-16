@@ -111,19 +111,37 @@
         <div class="nav-item">
             {% url 'student_view_profile' as student_view_profile %}
             <a href="{{ student_view_profile }}" class="nav-link {% if student_view_profile == request.path %}active{% endif %}">
-                <i class="fas fa-user-circle"></i>
+                <i class="nav-icon fas fa-user-circle"></i>
                 <span class="nav-text">Profile</span>
             </a>
         </div>
+        <p></p>
+
+        <h6 class="nav-section-title">Chatlog Management</h6>
 
         <div class="nav-item">
             {% url 'student_chatlog' as student_chatlog %}
             <a href="{% url 'student_chatlog' %}" class="nav-link {% if student_chatlog == request.path %}active{% endif %}">
-                <i class="fas fa-question-circle"></i>
+                <i class="nav-icon fas fa-question-circle"></i>
                 <span class="nav-text">Chat Log</span>
             </a>
         </div>
         
+        <div class="nav-item">
+            {% url 'student_chatlog_satisfied' as student_chatlog_satisfied %}
+            <a href="{% url 'student_chatlog_satisfied' %}" class="nav-link {% if student_chatlog_satisfied == request.path %}active{% endif %}">
+                <i class="nav-icon fas fa-smile"></i>
+                <span class="nav-text">Satisfied</span>
+            </a>
+        </div>
+
+        <div class="nav-item">
+            {% url 'student_chatlog_notsatisfied' as student_chatlog_notsatisfied %}
+            <a href="{% url 'student_chatlog_notsatisfied' %}" class="nav-link {% if student_chatlog_notsatisfied == request.path %}active{% endif %}">
+                <i class="nav-icon fas fa-frown"></i>
+                <span class="nav-text">Not Satisfied</span>
+            </a>
+        </div>
 
     {% endif %}
 </div>

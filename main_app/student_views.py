@@ -142,3 +142,23 @@ def student_chatlog(request):
         "logs": logs,
     }
     return render(request, "student_template/student_chatlog.html", context)
+
+def student_chatlog_satisfied(request):
+    student = get_object_or_404(Student, admin=request.user)
+    satisfied_logs = ChatLog.objects.filter(student=student, feedback__iexact="satisfied").order_by("-timestamp")
+
+    context = {
+        "page_title": "My Chat History - Satisfied",
+        "logs": satisfied_logs,
+    }
+    return render(request, "student_template/student_chatlog.html", context)
+
+def student_chatlog_notsatisfied(request):
+    student = get_object_or_404(Student, admin=request.user)
+    notsatisfied_logs = ChatLog.objects.filter(student=student, feedback__iexact="not satisfied").order_by("-timestamp")
+
+    context = {
+        "page_title": "My Chat History - Not Satisfied",
+        "logs": notsatisfied_logs,
+    }
+    return render(request, "student_template/student_chatlog.html", context)

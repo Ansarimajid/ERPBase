@@ -10,31 +10,33 @@
             <div class="stat-icon bg-blue">
                 <i class="fas fa-question-circle"></i>
             </div>
-            <div class="stat-content">
-                <div class="stat-number">{{ total_questions }}</div>
-                <div class="stat-label">Total Questions Asked</div>
-            </div>
+            <div class="stat-number">{{ total_questions }}</div>
+            <p class="stat-label">Total Questions Asked</p>
+            <a href="{% url 'student_chatlog' %}" class="btn btn-primary btn-sm mt-2">
+                <i class="fas fa-eye"></i> View All
+            </a>
         </div>
     
-        
         <div class="stat-card">
             <div class="stat-icon bg-green">
                 <i class="fas fa-smile"></i>
             </div>
-            <div class="stat-content">
-                <div class="stat-number">{{ satisfied_count }}</div>
-                <div class="stat-label">Satisfied Feedback</div>
-            </div>
+            <div class="stat-number">{{ satisfied_count }}</div>
+            <p class="stat-label">Satisfied Feedback</p>
+            <a href="{% url 'student_chatlog_satisfied' %}" class="btn btn-primary btn-sm mt-2">
+                <i class="fas fa-eye"></i> View All
+            </a>
         </div>
-        
+
         <div class="stat-card">
             <div class="stat-icon bg-red">
-                <i class="fas fa-frown"></i>
+                <i class="fas fa-smile"></i>
             </div>
-            <div class="stat-content">
-                <div class="stat-number">{{ not_satisfied_count }}</div>
-                <div class="stat-label">Not Satisfied Feedback</div>
-            </div>
+            <div class="stat-number">{{ not_satisfied_count }}</div>
+            <p class="stat-label">Not Satisfied Feedback</p>
+            <a href="{% url 'student_chatlog_notsatisfied' %}" class="btn btn-primary btn-sm mt-2">
+                <i class="fas fa-eye"></i> View All
+            </a>
         </div>
         
     </div>
@@ -48,48 +50,77 @@
                             Most Asked Questions
                         </h3>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            {% for q in most_asked %}
-                            <li class="list-group-item">
-                                <strong>Q:</strong> {{ q.representative }} <br>
-                                <small class="text-muted">Asked {{ q.count }} times</small>
-                            </li>
-                        {% empty %}
-                            <li class="list-group-item text-muted">No repeated questions yet.</li>
-                        {% endfor %}
-                        </div>
-                    </div>
+                <div class="container mt-4">
+        
+                    {% if most_asked %}
+                        <table class="table  table-bordered">
+                                <tr>
+                                    <th>Question</th>
+                                    <th>Asked Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for q in most_asked %}
+                                <tr>
+                                    <td>{{ q.representative }}</td>
+                                    <td>{{ q.count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>No chat history found.</p>
+                    {% endif %}
                 </div>
             </div>
+                            
+        </div>
+        </div>
         </div>
 
-        <!-- Quick Actions -->
-        <div class="row">
-            <div class="col-12">
-                <div class="erpnext-card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-bolt me-2"></i>
-                            Recent Question
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                        {% for log in recent_questions %}
-                            <li class="list-group-item">
-                                <strong>Q:</strong> {{ log.question|truncatechars:80 }} <br>
-                                <small class="text-muted">Asked on {{ log.timestamp|date:"M d, Y H:i" }}</small>
-                            </li>
-                        {% empty %}
-                            <li class="list-group-item text-muted">No questions asked yet.</li>
-                        {% endfor %}
-                        </div>
-                    </div>
-                </div>
+
+
+
+
+<div class="row">
+    <div class="col-12">
+        <div class="erpnext-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-bolt me-2"></i>
+                    Most Recent Questions
+                </h3>
             </div>
+        <div class="container mt-4">
+
+            {% if recent_questions %}
+                <table class="table  table-bordered">
+                        <tr>
+                            <th>QID</th>
+                            <th>Question</th>
+                            <th>Answer</th>
+                            <th>Feedback</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in recent_questions %}
+                        <tr>
+                            <td>{{ log.qid|slice:":3" }}</td>
+                            <td>{{ log.question }}</td>
+                            <td>{{ log.answer|slice:":50" }}</td>
+                            <td>{{ log.feedback|default:"-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No chat history found.</p>
+            {% endif %}
         </div>
-        
-        
+    </div>
+                    
+</div>
+</div>
+</div>
     
 {% endblock content %}
