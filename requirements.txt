@@ -16,6 +16,7 @@ scikit-learn==1.5.2
 google-genai==0.6.0
 langchain-chroma==0.1.4
 langchain-huggingface==0.3.1
+sentence-transformers==5.1.0
 
 # --- Build & Packaging ---
 packaging==24.1
