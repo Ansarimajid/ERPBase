@@ -4,7 +4,9 @@ from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from django.conf import settings
 
-API_URL = "http://localhost:7000/v1/completions"
+# API_URL = "http://localhost:7000/v1/completions"
+
+API_URL = "http://103.182.141.254:7000/v1/completions"
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 DB_ROOT = os.path.join(settings.BASE_DIR, "rag", "company_dbs")
@@ -43,15 +45,31 @@ def stream_model(prompt: str, max_tokens: int = 300):
                     continue
 
 def build_prompt(user_query: str, db: Chroma):
-    context = get_context(user_query, db, k=3)
-    return f"""Use the following context to answer the question.
+    context = get_context(user_query, db, k=1)
+    return f"""
+You are the official AI Assistant for LegalTech India. Your single most important task is to answer the user's query using ONLY the provided context.
 
-Context:
+<context>
 {context}
+</context>
 
-Question: {user_query}
+<query>
+{user_query}
+</query>
 
-Answer:"""
+**Instructions:**
+
+1.  **Primary Goal (Success Path):** Read the query. If the provided context contains the information needed to answer the query, you MUST provide a clear and helpful answer synthesized from that context. After answering, add a relevant call to action (e.g., "For help with LLP registration, our experts are ready to assist.").
+
+2.  **Fallback (Failure Path):** If the context does **not** contain the information to answer the query, **OR** if the query is **completely unrelated** to legal and business services in India, you **MUST** respond with the following message and nothing else:
+    *"I apologize, my knowledge is limited to the information I have been provided about LegalTech India's services. I am unable to answer that question. Is there anything I can help you with regarding business registration, compliance, or our other services?"*
+
+3.  **Greetings:** If the user provides a simple greeting like "hello," respond politely and ask how you can help.
+
+4.  **Final Check:** Do not provide legal advice.
+
+Answer:
+"""
 
 from .models import ChatLog, Student
 
