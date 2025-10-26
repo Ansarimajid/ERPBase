@@ -106,6 +106,7 @@ def company_chat(request, company_id):
         return JsonResponse({"error": "No question provided"}, status=400)
 
     prompt = build_prompt(question, db)
+    print(f"📝 Built prompt for company {company_id}:\n{prompt}")
     qid = str(uuid.uuid4())  # ✅ generate QID upfront
 
     def event_stream():
