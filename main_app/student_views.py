@@ -15,7 +15,7 @@ from .models import *
 
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-from .utils import embeddings   # ✅ import from utils.py
+# from .utils import embeddings   # ✅ import from utils.py
 
 def group_similar_questions(questions, threshold=0.9):
     """
@@ -78,7 +78,7 @@ def student_home(request):
 
     recent_questions = ChatLog.objects.filter(student=student).order_by("-timestamp")[:5]
     all_logs = ChatLog.objects.filter(student=student).order_by("-timestamp")
-    most_asked = group_similar_questions(all_logs, threshold=0.9)[:5]
+    # most_asked = group_similar_questions(all_logs, threshold=0.9)[:5]
 
 
 
@@ -88,7 +88,7 @@ def student_home(request):
         'satisfied_count': satisfied_count,
         'not_satisfied_count': not_satisfied_count,
         'recent_questions': recent_questions,
-        'most_asked': most_asked,
+        # 'most_asked': most_asked,
     }
     return render(request, 'student_template/erpnext_student_home.html', context)
 

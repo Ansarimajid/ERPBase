@@ -2,8 +2,10 @@ import os, uuid, json, time, itertools
 from datetime import datetime
 from google import genai
 from google.genai import types
-from langchain_chroma import Chroma
-from langchain_huggingface import HuggingFaceEmbeddings
+import chromadb
+from chromadb import Documents, EmbeddingFunction, Embeddings
+# from langchain_chroma import Chroma
+# from langchain_huggingface import HuggingFaceEmbeddings
 from django.conf import settings
 from .models import ChatLog, Student
 
@@ -52,24 +54,53 @@ def _get_available_key():
             print("⏳ All keys over limit, sleeping 10s...")
             time.sleep(10)
 
-# ==== EMBEDDING + DB ====
-embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+# ==== EMBEDDING + DB (Gemini + Chroma) ====
 DB_ROOT = os.path.join(settings.BASE_DIR, "rag", "company_dbs")
 LOG_ROOT = os.path.join(settings.BASE_DIR, "rag", "chat_logs")
 os.makedirs(LOG_ROOT, exist_ok=True)
 company_dbs = {}
 
+# --- Gemini embedding function ---
+class GeminiEmbeddingFunction(EmbeddingFunction):
+    def __init__(self):
+        super().__init__()
+        self.client = genai.Client(api_key=_get_available_key())  # use rotating key system
+
+    def __call__(self, input: Documents) -> Embeddings:
+        EMBEDDING_MODEL_ID = "gemini-embedding-001"
+        response = self.client.models.embed_content(
+            model=EMBEDDING_MODEL_ID,
+            contents=input,
+            config=types.EmbedContentConfig(task_type="retrieval_query")
+        )
+        return response.embeddings[0].values
+
+
+# --- Load per-company Chroma DB ---
 def get_db(company_id: str):
+    """Load a persistent Chroma DB for a given company."""
     if company_id not in company_dbs:
         db_path = os.path.join(DB_ROOT, company_id)
         if not os.path.exists(db_path):
             raise ValueError(f"No database found for company ID: {company_id}")
-        company_dbs[company_id] = Chroma(persist_directory=db_path, embedding_function=embeddings)
+
+        chroma_client = chromadb.PersistentClient(path=db_path)
+        db = chroma_client.get_collection(
+            name="try1",  # or use company_id as name if unique per org
+            embedding_function=GeminiEmbeddingFunction()
+        )
+        company_dbs[company_id] = db
+
     return company_dbs[company_id]
 
-def get_context(query: str, db: Chroma, k: int = 3) -> str:
-    docs = db.similarity_search(query, k=k)
-    return "\n\n".join([d.page_content for d in docs])
+
+# --- Retrieve top documents ---
+def get_context(query: str, db, k: int = 3) -> str:
+    """Query a Gemini-embedded Chroma DB and return concatenated results."""
+    results = db.query(query_texts=[query], n_results=k)
+    docs = results["documents"][0]
+    return "\n\n".join(docs)
+
 
 # ==== GEMINI STREAMING ====
 def stream_model(prompt: str, max_tokens: int = 300):
@@ -102,7 +133,7 @@ def stream_model(prompt: str, max_tokens: int = 300):
             continue
 
 # ==== PROMPT BUILD ====
-def build_prompt(user_query: str, db: Chroma):
+def build_prompt(user_query: str, db):
     context = get_context(user_query, db, k=1)
     return f"""
 You are the official AI Assistant for LegalTech India. Your single most important task is to answer the user's query using ONLY the provided context.
@@ -119,10 +150,10 @@ You are the official AI Assistant for LegalTech India. Your single most importan
 
 1.  **Primary Goal (Success Path):** Read the query. If the provided context contains the information needed to answer the query, you MUST provide a clear and helpful answer synthesized from that context. After answering, add a relevant call to action (e.g., "For help with LLP registration, our experts are ready to assist.").
 
-2.  **Fallback (Failure Path):** If the context does **not** contain the information to answer the query, **OR** if the query is **completely unrelated** to legal and business services in India, you **MUST** respond with the following message and nothing else:
-    *"I apologize, my knowledge is limited to the information I have been provided about LegalTech India's services. I am unable to answer that question. Is there anything I can help you with regarding business registration, compliance, or our other services?"*
+2.  **Greetings:** If the user provides a simple greeting, respond politely and **only** ask how you can help and **nothing else**.
 
-3.  **Greetings:** If the user provides a simple greeting like "hello," respond politely and ask how you can help.
+3.  **Fallback (Failure Path):** If the context does **not** contain the information to answer the query, **OR** if the query is **completely unrelated** to legal and business services in India, you **MUST** respond with the following message and nothing else:
+    *"I apologize, my knowledge is limited to the information I have been provided about LegalTech India's services. I am unable to answer that question. Is there anything I can help you with regarding business registration, compliance, or our other services?"*
 
 4.  **Final Check:** Do not provide legal advice.
 
