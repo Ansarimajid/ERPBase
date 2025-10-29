@@ -1,21 +1,19 @@
 import json
 import requests
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render, reverse
+from django.shortcuts import redirect, render, reverse
 from django.views.decorators.csrf import csrf_exempt
 
 from .EmailBackend import EmailBackend
-
-# Create your views here.
 
 from django.http import JsonResponse, StreamingHttpResponse, FileResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.conf import settings
 import json, uuid, os
-from .utils import get_db, build_prompt, stream_model, save_qa
+from .utils import stream_model, save_qa
 
 
 def login_page(request):
@@ -32,26 +30,7 @@ def login_page(request):
 def doLogin(request, **kwargs):
     if request.method != 'POST':
         return HttpResponse("<h4>Denied</h4>")
-    else:
-        # #Google recaptcha
-        # captcha_token = request.POST.get('g-recaptcha-response')
-        # captcha_url = "https://www.google.com/recaptcha/api/siteverify"
-        # captcha_key = "6LfTGD4qAAAAALtlli02bIM2MGi_V0cUYrmzGEGd"
-        # data = {
-        #     'secret': captcha_key,
-        #     'response': captcha_token
-        # }
-        # # Make request
-        # try:
-        #     captcha_server = requests.post(url=captcha_url, data=data)
-        #     response = json.loads(captcha_server.text)
-        #     if response['success'] == False:
-        #         messages.error(request, 'Invalid Captcha. Try Again')
-        #         return redirect('/')
-        # except:
-        #     messages.error(request, 'Captcha could not be verified. Try Again')
-        #     return redirect('/')
-        
+    else:      
         #Authenticate
         user = EmailBackend.authenticate(request, username=request.POST.get('email'), password=request.POST.get('password'))
         if user != None:
@@ -77,27 +56,14 @@ def doLogin(request, **kwargs):
             messages.error(request, "Invalid details")
             return redirect("/")
 
-
-
 def logout_user(request):
     if request.user != None:
         logout(request)
     return redirect("/")
 
-
-from django.http import StreamingHttpResponse, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
-import uuid
-
 @csrf_exempt
 @require_POST
 def company_chat(request, company_id):
-    try:
-        db = get_db(company_id)
-    except ValueError as e:
-        return JsonResponse({"error": str(e)}, status=404)
-
     data = json.loads(request.body.decode("utf-8"))
     question = data.get("question")
     history = data.get("history", [])
@@ -105,24 +71,40 @@ def company_chat(request, company_id):
     if not question:
         return JsonResponse({"error": "No question provided"}, status=400)
 
-    prompt = build_prompt(question, db)
-    print(f"📝 Built prompt for company {company_id}:\n{prompt}")
-    qid = str(uuid.uuid4())  # ✅ generate QID upfront
+    # 🔹 Call your Flask API for prompt generation instead of local build_prompt
+    try:
+        flask_response = requests.post(
+            "http://103.182.141.254:7000/generate_prompt",
+            headers={"Content-Type": "application/json"},
+            json={"company_id": company_id, "user_query": question},
+            timeout=10
+        )
+        if flask_response.status_code != 200:
+            return JsonResponse({"error": "Flask API failed", "details": flask_response.text}, status=500)
+        prompt_data = flask_response.json()
+        prompt = prompt_data.get("prompt", "")
+    except Exception as e:
+        return JsonResponse({"error": f"Failed to connect Flask API: {e}"}, status=500)
+
+    print(f"📝 Prompt fetched from Flask for company {company_id}:\n{prompt}")
+
+    qid = str(uuid.uuid4())
 
     def event_stream():
         answer = ""
-        for token in stream_model(prompt):
+        for token in stream_model(prompt):  # ✅ Still using Gemini streaming
             answer += token
             safe_token = token.replace("\n", " ")
             yield f"data: {safe_token}\n\n"
+
         try:
+            from .utils import save_qa
             save_qa(company_id, question, answer, qid=qid)
         except Exception as e:
-            # Don’t block widget if saving fails
             print(f"⚠️ Failed to save Q&A: {e}")
 
     response = StreamingHttpResponse(event_stream(), content_type="text/event-stream")
-    response["X-QID"] = qid  # ✅ always send QID
+    response["X-QID"] = qid
     return response
 
 
@@ -148,5 +130,5 @@ def home(request):
     return render(request, "Rag/index.html")
 
 def widget(request):
-    widget_path = os.path.join(settings.BASE_DIR, "rag", "widget.js")
+    widget_path = os.path.join(settings.BASE_DIR, "main_app/templates/Rag/", "widget.js")
     return FileResponse(open(widget_path, "rb"), content_type="application/javascript")
