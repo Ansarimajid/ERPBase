@@ -15,6 +15,11 @@
                 <label for="primaryColor" class="form-label">Primary Color</label>
                 <input type="color" id="primaryColor" class="form-control form-control-color" value="{{ color }}">
             </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="button" id="reload-btn" class="btn btn-outline-primary w-100">
+                    See Preview Changes
+                </button>
+            </div>
         </div>
     </form>
 
@@ -45,6 +50,7 @@
   const display = document.getElementById('snippet-display');
   const copyBtn = document.getElementById('copy-btn');
   const widgetArea = document.getElementById('widget-preview-area');
+  const reloadBtn = document.getElementById('reload-btn');
 
   function escapeAttr(s) {
     return String(s)
@@ -72,30 +78,31 @@
 
   // Update both snippet and live preview
   function updateSnippetAndPreview() {
-    const bot = botInput.value || '';
-    const color = colorInput.value || '';
-    const botEsc = escapeAttr(bot);
-    const colorEsc = escapeAttr(color);
-    const studEsc = escapeAttr(studentId);
+  const bot = botInput.value || '';
+  const color = colorInput.value || '';
+  const botEsc = escapeAttr(bot);
+  const colorEsc = escapeAttr(color);
+  const studEsc = escapeAttr(studentId);
 
-    const raw = '<script src="' + baseUrl + 'widget" '
-      + 'data-api-url="' + baseUrl + 'ID/' + studEsc + '" '
-      + 'data-bot-name="' + botEsc + '" '
-      + 'data-primary-color="' + colorEsc + '"></scr' + 'ipt>';
+  const raw = '<script src="' + baseUrl + 'widget" '
+    + 'data-api-url="' + baseUrl + 'ID/' + studEsc + '" '
+    + 'data-bot-name="' + botEsc + '" '
+    + 'data-primary-color="' + colorEsc + '"></scr' + 'ipt>';
 
-    const escapedForDisplay = raw.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    display.innerHTML = escapedForDisplay;
-    copyBtn.dataset.raw = raw;
+  // ✅ Show actual usable snippet in display box
+  display.textContent = raw;
+  copyBtn.dataset.raw = raw;
 
-    // Update live preview
-    widgetArea.innerHTML = ''; // clear old widget
-    const script = document.createElement('script');
-    script.src = baseUrl + 'widget';
-    script.dataset.apiUrl = baseUrl + 'ID/' + studentId;
-    script.dataset.botName = bot;
-    script.dataset.primaryColor = color;
-    widgetArea.appendChild(script);
-  }
+  // Update live preview
+  widgetArea.innerHTML = ''; // clear old widget
+  const script = document.createElement('script');
+  script.src = baseUrl + 'widget';
+  script.dataset.apiUrl = baseUrl + 'ID/' + studentId;
+  script.dataset.botName = bot;
+  script.dataset.primaryColor = color;
+  widgetArea.appendChild(script);
+}
+
 
   // Auto-save customization
   function saveCustomization() {
@@ -139,6 +146,11 @@
 
   botInput.addEventListener('input', scheduleAutoSave);
   colorInput.addEventListener('input', scheduleAutoSave);
+
+  // New button — reloads page
+  reloadBtn.addEventListener('click', function() {
+    location.reload();
+  });
 
   // Initialize
   updateSnippetAndPreview();
