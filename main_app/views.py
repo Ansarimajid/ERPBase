@@ -9,7 +9,6 @@ from django.views.decorators.csrf import csrf_exempt
 from .EmailBackend import EmailBackend
 
 from django.http import JsonResponse, StreamingHttpResponse, FileResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.conf import settings
 import json, uuid, os
@@ -126,8 +125,36 @@ def submit_feedback(request, company_id):
     return JsonResponse({"status": "success", "message": "Feedback saved"})
 
 
+from django.shortcuts import render
+from .models import Student, StudentBot
+
 def home(request):
-    return render(request, "Rag/index.html")
+    base_url = request.build_absolute_uri('/')  # Gets full domain + port
+
+    # Try to get student for this user
+    try:
+        student = Student.objects.get(admin=request.user)
+        student_bot, _ = StudentBot.objects.get_or_create(student=student)
+
+        bot_name = student_bot.bot_name
+        color = student_bot.color
+        student_id = student.student_id
+    except Student.DoesNotExist:
+        # Fallback defaults if no student exists
+        bot_name = "NuroBot"
+        color = "#b72615"
+        student_id = "BX100DCA"
+
+    context = {
+        "base_url": base_url,
+        "bot_name": bot_name,
+        "color": color,
+        "student_id": student_id,
+    }
+
+    return render(request, "Rag/index.html", context)
+
+
 
 def widget(request):
     widget_path = os.path.join(settings.BASE_DIR, "main_app/templates/Rag/", "widget.js")

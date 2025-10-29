@@ -1,6 +1,6 @@
 {% extends 'main_app/base.html' %}
 {% load static %}
-{% block page_title %}{{page_title}}{% endblock page_title %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
 
 {% block content %}
 <div class="container mt-4">
@@ -9,37 +9,43 @@
         <div class="row g-3">
             <div class="col-md-4">
                 <label for="botName" class="form-label">Bot Name</label>
-                <input type="text" id="botName" class="form-control" value="AI Assistant">
+                <input type="text" id="botName" class="form-control" value="{{ bot_name }}">
             </div>
             <div class="col-md-3">
                 <label for="primaryColor" class="form-label">Primary Color</label>
-                <input type="color" id="primaryColor" class="form-control form-control-color" value="#667eea">
+                <input type="color" id="primaryColor" class="form-control form-control-color" value="{{ color }}">
             </div>
         </div>
     </form>
 
     <h5 class="mt-3">Copy this snippet:</h5>
     <div class="position-relative">
-        <pre id="snippet-box" class="border rounded bg-light p-3"><code id="snippet-display"></code></pre>
+        <pre id="snippet-box" class="border rounded bg-light p-3">
+            <code id="snippet-display"></code>
+        </pre>
 
         <button id="copy-btn" class="btn btn-sm btn-outline-secondary position-absolute"
                 style="top:10px; right:10px;">
             Copy
         </button>
     </div>
+
+    <h5 class="mt-4">Live Widget Preview:</h5>
+    <div class="border rounded p-4 bg-white mt-3" id="widget-preview-area">
+        <!-- The widget script will be injected here -->
+    </div>
 </div>
 
 <script>
 (function(){
-  // student_id from Django view (safe insertion for JS)
   const studentId = "{{ student_id|escapejs }}";
-
+  const baseUrl = "{{ base_url|escapejs }}";
   const botInput = document.getElementById('botName');
   const colorInput = document.getElementById('primaryColor');
   const display = document.getElementById('snippet-display');
   const copyBtn = document.getElementById('copy-btn');
+  const widgetArea = document.getElementById('widget-preview-area');
 
-  // escape values for safe HTML attributes (so copied snippet is valid)
   function escapeAttr(s) {
     return String(s)
       .replace(/&/g, '&amp;')
@@ -49,42 +55,93 @@
       .replace(/>/g, '&gt;');
   }
 
-  function updateSnippet() {
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  // Update both snippet and live preview
+  function updateSnippetAndPreview() {
     const bot = botInput.value || '';
     const color = colorInput.value || '';
-
     const botEsc = escapeAttr(bot);
     const colorEsc = escapeAttr(color);
     const studEsc = escapeAttr(studentId);
 
-    // build raw HTML string but split the closing tag to avoid closing this outer <script> block
-    const raw = '<script src="http://192.168.1.10:5000/widget" '
-      + 'data-api-url="http://192.168.1.10:5000/ID/' + studEsc + '" '
+    const raw = '<script src="' + baseUrl + 'widget" '
+      + 'data-api-url="' + baseUrl + 'ID/' + studEsc + '" '
       + 'data-bot-name="' + botEsc + '" '
       + 'data-primary-color="' + colorEsc + '"></scr' + 'ipt>';
 
-    // escaped version for display (so browser shows the tags as text)
     const escapedForDisplay = raw.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
     display.innerHTML = escapedForDisplay;
-    copyBtn.dataset.raw = raw; // store raw HTML for copying
+    copyBtn.dataset.raw = raw;
+
+    // Update live preview
+    widgetArea.innerHTML = ''; // clear old widget
+    const script = document.createElement('script');
+    script.src = baseUrl + 'widget';
+    script.dataset.apiUrl = baseUrl + 'ID/' + studentId;
+    script.dataset.botName = bot;
+    script.dataset.primaryColor = color;
+    widgetArea.appendChild(script);
   }
 
-  botInput.addEventListener('input', updateSnippet);
-  colorInput.addEventListener('input', updateSnippet);
+  // Auto-save customization
+  function saveCustomization() {
+    const botName = botInput.value;
+    const color = colorInput.value;
+
+    fetch("{% url 'save_bot_customization' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie('csrftoken'),
+      },
+      body: JSON.stringify({
+        bot_name: botName,
+        color: color
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (!data.success) console.error("Save failed:", data.error);
+    })
+    .catch(err => console.error("Save error:", err));
+  }
+
+  let saveTimer;
+  function scheduleAutoSave() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      saveCustomization();
+      updateSnippetAndPreview();
+    }, 600);
+  }
 
   copyBtn.addEventListener('click', function() {
     const raw = this.dataset.raw || '';
     navigator.clipboard.writeText(raw).then(() => {
       this.innerText = 'Copied!';
       setTimeout(() => this.innerText = 'Copy', 2000);
-    }).catch(err => {
-      alert('Copy failed: ' + err);
-    });
+    }).catch(err => alert('Copy failed: ' + err));
   });
 
-  // initialize
-  updateSnippet();
+  botInput.addEventListener('input', scheduleAutoSave);
+  colorInput.addEventListener('input', scheduleAutoSave);
+
+  // Initialize
+  updateSnippetAndPreview();
 })();
 </script>
 {% endblock %}

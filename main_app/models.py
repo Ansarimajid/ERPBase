@@ -108,3 +108,11 @@ class ChatLog(models.Model):
 
     def __str__(self):
         return f"{self.student.student_id} - {self.qid}"
+
+class StudentBot(models.Model):
+    student = models.OneToOneField(Student, on_delete=models.CASCADE)
+    bot_name = models.CharField(max_length=100, default="My Bot")
+    color = models.CharField(max_length=20, default="#000000")
+
+    def __str__(self):
+        return f"{self.bot_name} ({self.student})"

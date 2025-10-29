@@ -3,6 +3,7 @@ from django.core.files.storage import FileSystemStorage
 from django.shortcuts import (get_object_or_404,
                               redirect, render)
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 
 from .forms import *
 from .models import *
@@ -97,12 +98,43 @@ def student_chatlog_notsatisfied(request):
     }
     return render(request, "student_template/student_chatlog.html", context)
 
+from django.shortcuts import render, get_object_or_404
+from .models import Student, StudentBot
+
 def snippet(request):
     student = get_object_or_404(Student, admin=request.user)
     student_id = student.student_id
+    student_bot, _ = StudentBot.objects.get_or_create(student=student)
+
+    base_url = request.build_absolute_uri('/')
 
     context = {
         "page_title": "Snippet to Connect",
         "student_id": student_id,
+        "bot_name": student_bot.bot_name,
+        "color": student_bot.color,
+        "base_url": base_url,
     }
     return render(request, "student_template/snippet.html", context)
+
+
+from django.http import JsonResponse
+import json
+
+@csrf_exempt
+def save_bot_customization(request):
+    if request.method == "POST":
+        data = json.loads(request.body.decode("utf-8"))
+        bot_name = data.get("bot_name")
+        color = data.get("color")
+
+        student = get_object_or_404(Student, admin=request.user)
+
+        student_bot, created = StudentBot.objects.get_or_create(student=student)
+        student_bot.bot_name = bot_name
+        student_bot.color = color
+        student_bot.save()
+
+        return JsonResponse({"success": True, "message": "Bot customization saved!"})
+    
+    return JsonResponse({"success": False, "error": "Invalid request method."})
