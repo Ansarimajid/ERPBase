@@ -109,7 +109,7 @@ def snippet(request):
     base_url = request.build_absolute_uri('/')
 
     context = {
-        "page_title": "Snippet to Connect",
+        "page_title": "Widget Customization & Connect",
         "student_id": student_id,
         "bot_name": student_bot.bot_name,
         "color": student_bot.color,
