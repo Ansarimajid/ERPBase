@@ -38,44 +38,7 @@
                 <i class="fas fa-eye"></i> View All
             </a>
         </div>
-        
     </div>
-        <!-- Quick Actions -->
-        <div class="row">
-            <div class="col-12">
-                <div class="erpnext-card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-bolt me-2"></i>
-                            Most Asked Questions
-                        </h3>
-                    </div>
-                <div class="container mt-4">
-        
-                    {% if most_asked %}
-                        <table class="table  table-bordered">
-                                <tr>
-                                    <th>Question</th>
-                                    <th>Asked Count</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for q in most_asked %}
-                                <tr>
-                                    <td>{{ q.representative }}</td>
-                                    <td>{{ q.count }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    {% else %}
-                        <p>No chat history found.</p>
-                    {% endif %}
-                </div>
-            </div>
-                            
-        </div>
-        </div>
         </div>
 
 
