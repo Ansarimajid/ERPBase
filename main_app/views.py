@@ -145,12 +145,12 @@ def home(request):
             # If the user is logged in but no Student exists
             bot_name = "NuroBot"
             color = "#b72615"
-            student_id = None  # No ID passed
+            student_id = "BX100DCA" # No ID passed
     else:
         # If user not logged in, skip querying Student
         bot_name = "NuroBot"
         color = "#b72615"
-        student_id = None  # No ID passed
+        student_id = "BX100DCA"  # No ID passed
 
     context = {
         "base_url": base_url,
