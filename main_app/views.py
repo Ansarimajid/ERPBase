@@ -130,6 +130,7 @@ from .models import Student, StudentBot
 
 def home(request):
     base_url = request.build_absolute_uri('/')  # Gets full domain + port
+    base_url = base_url.replace("http://", "https://")
 
     # Try to get student for this user
     try:
