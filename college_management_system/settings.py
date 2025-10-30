@@ -39,6 +39,14 @@ DEBUG = True
 # ALLOWED_HOSTS = ['smswithdjango.herokuapp.com']
 ALLOWED_HOSTS = ['*']  # Not recommended but useful in dev mode
 
+# CSRF & CORS Configuration for Railway Deployment
+CSRF_TRUSTED_ORIGINS = [
+    'https://web-production-4e4f.up.railway.app',
+]
+
+# Make sure cookies are secure over HTTPS
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 
 # Application definition
 
