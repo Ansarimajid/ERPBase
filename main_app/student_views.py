@@ -107,6 +107,8 @@ def snippet(request):
     student_bot, _ = StudentBot.objects.get_or_create(student=student)
 
     base_url = request.build_absolute_uri('/')
+    # Force HTTPS even if the request is HTTP
+    base_url = base_url.replace("http://", "https://")
 
     context = {
         "page_title": "Widget Customization & Connect",
