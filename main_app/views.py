@@ -129,31 +129,41 @@ from django.shortcuts import render
 from .models import Student, StudentBot
 
 def home(request):
-    base_url = request.build_absolute_uri('/')  # Gets full domain + port
+    base_url = request.build_absolute_uri('/')
     base_url = base_url.replace("http://", "https://")
 
-    # Try to get student for this user
-    try:
-        student = Student.objects.get(admin=request.user)
-        student_bot, _ = StudentBot.objects.get_or_create(student=student)
+    # Check if user is authenticated before querying
+    if request.user.is_authenticated:
+        try:
+            student = Student.objects.get(admin=request.user)
+            student_bot, _ = StudentBot.objects.get_or_create(student=student)
 
-        bot_name = student_bot.bot_name
-        color = student_bot.color
-        student_id = student.student_id
-    except Student.DoesNotExist:
-        # Fallback defaults if no student exists
+            bot_name = student_bot.bot_name
+            color = student_bot.color
+            student_id = student.student_id
+        except Student.DoesNotExist:
+            # If the user is logged in but no Student exists
+            bot_name = "NuroBot"
+            color = "#b72615"
+            student_id = None  # No ID passed
+    else:
+        # If user not logged in, skip querying Student
         bot_name = "NuroBot"
         color = "#b72615"
-        student_id = "BX100DCA"
+        student_id = None  # No ID passed
 
     context = {
         "base_url": base_url,
         "bot_name": bot_name,
         "color": color,
-        "student_id": student_id,
     }
 
+    # Only include student_id if it exists
+    if student_id:
+        context["student_id"] = student_id
+
     return render(request, "Rag/index.html", context)
+
 
 
 
