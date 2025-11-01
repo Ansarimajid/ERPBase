@@ -428,7 +428,7 @@
         @media (max-width: 768px) { 
             .chat-container { 
                 width: calc(100vw - 40px); 
-                height: 550px;
+                height: 500px;
                 max-width: 420px;
             }
         }
