@@ -148,8 +148,8 @@ def home(request):
             student_id = "BX100DCA" # No ID passed
     else:
         # If user not logged in, skip querying Student
-        bot_name = "NuroBot"
-        color = "#b72615"
+        bot_name = "Legal Bot"
+        color = "#919191"
         student_id = "BX100DCA"  # No ID passed
 
     context = {
