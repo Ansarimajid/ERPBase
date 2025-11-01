@@ -12,7 +12,7 @@ class LoginCheckMiddleWare(MiddlewareMixin):
             reverse('login_page'),
             reverse('user_login'),
             '/widget',
-            '/index',
+            '/chatbot',
         ]
 
         # Public endpoints with dynamic company_id (can't use reverse easily)
