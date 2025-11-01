@@ -59,7 +59,7 @@ urlpatterns = [
 
      path("ID/<str:company_id>/chat", views.company_chat, name="company_chat"),
     path("ID/<str:company_id>/feedback", views.submit_feedback, name="submit_feedback"),
-    path("index", views.home, name="home"),
+    path("chatbot", views.home, name="home"),
     path("widget", views.widget, name="widget"),
 
 
